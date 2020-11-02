@@ -230,6 +230,16 @@ defmodule BroadwayKafka.BrodClient do
     do: validation_error(:max_bytes, "a positive integer", value)
 
   defp validate_option(:sasl, value) do
+    with {mechanism, token}
+        when mechanism in [:oauthbearer] and
+          is_function(token) <- value do
+      {:ok, value}
+    else
+      _value -> validation_error(:sasl, "a tuple of SASL mechanism and token function", value)
+    end
+  end
+
+  defp validate_option(:sasl, value) do
     with {mechanism, username, password}
          when mechanism in [:plain, :scram_sha_256, :scram_sha_512] and
                 is_binary(username) and
